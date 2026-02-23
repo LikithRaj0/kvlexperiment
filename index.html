@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kirchhoff's Voltage Law - SOLVE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/general.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/query.css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="js/jquery-3.6.0.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/jquery.ui.touch-punch.min.js"></script>
+    <script defer src="js/kvl.js"></script>
+    
+    <style>
+      @media (max-width: 600px) {
+        canvas {
+          width: 100%;
+          height: auto;
+        }
+      }
+
+      .canvas__div {
+        width: 100%;
+        border: 1px solid var(--clr-title-background);
+        background-color: #fff;
+        display: block;
+        flex-wrap: wrap;
+        flex-direction: row;
+        height: auto;
+        border-bottom-right-radius: 1rem;
+        border-bottom-left-radius: 1rem;
+      }
+
+      #canvas {
+        display: block;
+        margin: 0 auto;
+        border: 1px solid #fff;
+        border-radius: 7px;
+      }
+
+      .control-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+      }
+
+      .button {
+        padding: 10px 20px;
+        background-color: #089B93;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .button:hover {
+        background-color: #067970;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+
+      .button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+        filter: blur(0.5px);
+        transform: none;
+        box-shadow: none;
+      }
+
+      #mytable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      #mytable th,
+      #mytable td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+      }
+
+      #mytable th {
+        background-color: #089B93;
+        color: white;
+        font-weight: 600;
+      }
+
+      #mytable tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+
+      .procedure-modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+      }
+
+      .procedure-modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        border-radius: 10px;
+        position: relative;
+      }
+
+      .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .close-button:hover,
+      .close-button:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .procedure-modal-content h3 {
+        color: var(--clr-side-background3);
+        margin-bottom: 15px;
+      }
+
+      .procedure-modal-content ol {
+        list-style-type: decimal;
+        margin-left: 20px;
+        padding: 0;
+      }
+
+      .procedure-modal-content li {
+        margin-bottom: 10px;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+
+      .variables-sections {
+        background-color: #D5E8ED;
+        padding: 20px 15px;
+        border-radius: 0;
+        height: 350px;
+      }
+
+      .var-div {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+      }
+
+      .var-div:last-child {
+        margin-bottom: 0;
+      }
+
+      .var-row-top {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .var-div label {
+        flex: 0 0 110px;
+        font-size: 13px;
+        font-weight: 400;
+        color: #333;
+        text-align: left;
+      }
+
+      .var-spinner {
+        width: 60px;
+        padding: 1px 10px 1px 2px;
+        border: 1px solid #999;
+        border-radius: 3px;
+        font-size: 12px;
+        text-align: left;
+        background-color: white;
+        margin-left: 10px;
+      }
+
+      .var-unit {
+        font-size: 13px;
+        color: #333;
+        margin-left: 8px;
+      }
+
+      .var-slider {
+        width: 100%;
+        height: 10px;
+        margin-left: 100px;
+      }
+
+      .ui-slider {
+        background: #B8B8B8;
+        border: none;
+        border-radius: 4px;
+        height: 6px;
+        position: relative;
+        width: 170px;
+      }
+
+      .ui-slider .ui-slider-handle {
+        width: 16px;
+        height: 16px;
+        background: linear-gradient(180deg, #7CB8E8 0%, #5A9BD5 100%);
+        border: 1px solid #4A7BA7;
+        border-radius: 50%;
+        cursor: pointer;
+        outline: none;
+        top: 50%;
+        transform: translateY(-50%);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.4);
+      }
+
+      .ui-slider .ui-slider-handle:hover {
+        background: linear-gradient(180deg, #8DC5F0 0%, #6AABDF 100%);
+      }
+
+      .ui-slider .ui-slider-handle:focus {
+        box-shadow: 0 0 0 2px rgba(91, 155, 213, 0.4), 0 2px 4px rgba(0,0,0,0.25);
+      }
+
+      .ui-slider .ui-slider-range {
+        background: #5B9BD5;
+        border-radius: 4px;
+      }
+
+      .ui-spinner {
+        display: inline-block;
+        position: relative;
+      }
+
+      .ui-spinner-input {
+        padding-right: 18px !important;
+      }
+
+      .ui-spinner-button {
+        width: 16px;
+        height: 50%;
+        position: absolute;
+        right: 0;
+        background: #E8E8E8;
+        border: 1px solid #999;
+        border-left: 1px solid #999;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .ui-spinner-up {
+        top: 0;
+        border-radius: 0 2px 0 0;
+        border-bottom-width: 0.5px;
+      }
+
+      .ui-spinner-down {
+        bottom: 0;
+        border-radius: 0 0 2px 0;
+        border-top-width: 0.5px;
+      }
+
+      .ui-spinner-button:hover {
+        background: #D0D0D0;
+      }
+
+      .ui-spinner-button .ui-icon {
+        margin: 0;
+        position: static;
+      }
+    </style>
+  </head>
+  <body onload="startsim();varinit();">
+    <div class="title-div-container">
+      <div class="title-div">
+        <div class="logo-div">
+          <a href="#"><img src="images/logo_nitk.png" alt="Logo" class="logo" /></a>
+        </div>
+        <h1>Kirchhoff's Voltage Law</h1>
+      </div>
+    </div>
+    <div class="container">
+      <div class="sidebar">
+        <ul class="tool-menu">
+          <li class="tool-list">
+            <a href="#simulation" class="tool-link" title="Simulation">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="#089B93" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" class="icons">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.25V18a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18V8.25m-18 0V6a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 6v2.25m-18 0h18M5.25 6h.008v.008H5.25V6zM7.5 6h.008v.008H7.5V6zm2.25 0h.008v.008H9.75V6z"/>
+              </svg>
+            </a>
+            <span>Simulation</span>
+          </li>
+          <!-- <li class="tool-list">
+            <a href="#variables" class="tool-link" title="Variables">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff" viewBox="0 0 24 24" stroke-width="1.5" stroke="#089B93" class="icons">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.745 3A23.933 23.933 0 003 12c0 3.183.62 6.22 1.745 9M19.5 3c.967 2.78 1.5 5.817 1.5 9s-.533 6.22-1.5 9M8.25 8.885l1.444-.89a.75.75 0 011.105.402l2.402 7.206a.75.75 0 001.104.401l1.445-.889m-8.25.75l.213.09a1.687 1.687 0 002.062-.617l4.45-6.676a1.688 1.688 0 012.062-.618l.213.09"/>
+              </svg>
+            </a>
+            <span>Variables</span>
+          </li> -->
+          <li class="tool-list">
+            <a href="#comments" class="tool-link" title="Comments">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="#089B93" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" class="icons">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </a>
+            <span>Controls</span>
+          </li>
+          <!-- <li class="tool-list">
+            <a href="#calculations" class="tool-link" title="Calculations"
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="#089B93"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                class="icons"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V13.5zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z"
+                />
+              </svg>
+            </a>
+            <span>Calculations</span>
+          </li> -->
+          <li class="tool-list">
+            <a href="#result" class="tool-link" title="Result"
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="#089B93"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                class="icons"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75"
+                />
+              </svg>
+            </a>
+            <span>Result</span>
+          </li>
+        </ul>
+      </div>
+      <div class="main">
+        <div class="main-section">
+          <div id="simulation" class="main__task-div">
+            <h3 class="task-title">Simulation</h3>
+            <div class="div__control">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="#089B93" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" class="ctrl-icons" onclick="showProcedure()" style="cursor: pointer; position: absolute; top: 0.2rem; right: 2.2rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16 M4 12h16 M4 18h16"/>
+              </svg>
+            </div>
+            <div class="canvas__div">
+              <canvas id="canvas" width="820" height="500"></canvas>
+            </div>
+          </div>
+
+          <div id="variables" class="main__task-div">
+            <div class="settings-sections">
+              <h3 class="task-title">Variables</h3>
+              <div class="variables-sections">
+                <div class="var-div">
+                  <div class="var-row-top">
+                    <label for="voltageSpinner">DC Voltage</label>
+                    <input class="var-spinner" id="voltageSpinner" name="value" />
+                    <span class="var-unit">V</span>
+                  </div>
+                  <div class="var-slider" id="voltageSlider"></div>
+                </div>
+                <div class="var-div">
+                  <div class="var-row-top">
+                    <label for="resistor1Spinner">Resistance R1</label>
+                    <input class="var-spinner" id="resistor1Spinner" name="value" />
+                    <span class="var-unit">Ω</span>
+                  </div>
+                  <div class="var-slider" id="resistor1Slider"></div>
+                </div>
+                <div class="var-div">
+                  <div class="var-row-top">
+                    <label for="resistor2Spinner">Resistance R2</label>
+                    <input class="var-spinner" id="resistor2Spinner" name="value" />
+                    <span class="var-unit">Ω</span>
+                  </div>
+                  <div class="var-slider" id="resistor2Slider"></div>
+                </div>
+                <div class="var-div">
+                  <div class="var-row-top">
+                    <label for="resistor3Spinner">Resistance R3</label>
+                    <input class="var-spinner" id="resistor3Spinner" name="value" />
+                    <span class="var-unit">Ω</span>
+                  </div>
+                  <div class="var-slider" id="resistor3Slider"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="comments" class="main__task-div">
+            <h3 class="task-title">Controls</h3>
+            <div class="settings-sections">
+              <div class="control-sections">
+                <button id="simulate-btn" class="button" onclick="startSimulation();">Start Simulation</button>
+                <button id="add-to-table-btn" class="button" onclick="addtable();">Add to Table</button>
+                <button id="calcV-btn" class="button" onclick="showvalue1();">Calculate V' in Loop1</button>
+                <button id="calcV2-btn" class="button" onclick="showvalue2();">Calculate V" in Loop2</button>
+                <button id="result-btn" class="button" onclick="showresult();">Result</button>
+                <p id="message" style="text-align: center; margin-top: 20px;"></p>
+              </div>
+            </div>
+          </div>
+
+          <div id="tabulation" class="main__task-div">
+            <h3 class="task-title">Tabulation</h3>
+            <div class="settings-sections">
+              <div class="control-sections">
+                <table id="mytable">
+                  <tr>
+                    <th>DC Voltage</th>
+                    <th>Value Of V<sub>1</sub></th>
+                    <th>Value Of V<sub>2</sub></th>
+                    <th>Value Of V<sub>3</sub></th>
+                    <th>Value Of V'</th>
+                    <th>Value Of V"</th>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="calculation" class="main__task-div">
+            <h3 class="task-title">Calculations</h3>
+            <div class="settings-sections">
+              <div class="control-sections">
+                <p>Loop1: V'= V<SUB>1</SUB>+V<SUB>2</SUB></p>
+                <p>Loop2: V"= V<sub>2</sub>+V<SUB>3</SUB></p>
+                <p>Compare V' with V present in loop.</p>
+                <p>Since there is no voltage in loop2,V" must be equal to zero</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="result" class="main__task-div">
+            <h3 class="task-title">Result</h3>
+            <div class="settings-sections">
+              <div class="control-sections">
+                <p id="resultdisplay">Since in loop1 V' is equal to supply voltage V present in loop1 and in loop2 V" is equal to 0. Hence Kirchhoff's voltage law is proved.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="main__task-div footer">
+            <p>Copyright © SOLVE The Virtual Lab @ NITK Surathkal</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="procedureModal" class="procedure-modal">
+      <div class="procedure-modal-content">
+        <span class="close-button" onclick="hideProcedure()">&times;</span>
+        <h3>Experiment Procedure</h3>
+        <ol>
+          <li>Click on start simulation to start the circuit.</li>
+          <li>Set the DC voltage (0-30V).</li>
+          <li>Set the resistance value (1 ohms - 200 ohms).</li>
+          <li>Click on add table to add the required resistance and voltage values to the table</li>
+          <li>The voltmeters are connected in parallel with the resistors.</li>
+          <li>Consider loop1 from the circuit diagram and observe the values of voltage across the resistors R1 and R3.</li>
+          <li>Check if the equivalent voltage across the resistors R1 and R3 is equal to the supply voltage existing in loop1.</li>
+          <li>Now consider loop2 and check for the equivalent voltage across the resistors R2 and R3.</li>
+          <li>If the equivalent voltages in loop2 is equal to zero, and if it satisfies the condition mentioned in point 5., then the Kirchoff's voltage law is proved.</li>
+        </ol>
+      </div>
+    </div>
+
+    <script>
+      function showProcedure() {
+        document.getElementById('procedureModal').style.display = 'block';
+      }
+
+      function hideProcedure() {
+        document.getElementById('procedureModal').style.display = 'none';
+      }
+
+      window.onclick = function(event) {
+        var modal = document.getElementById('procedureModal');
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      }
+    </script>
+
+    <img id="img_r3" src="images/vertical_resistor.png" alt="R3 Resistor" style="display: none;">
+    <img id="img_resistor_h" src="images/horizontal_resistor.png" alt="Resistor H" style="display: none;">
+  </body>
+</html>
